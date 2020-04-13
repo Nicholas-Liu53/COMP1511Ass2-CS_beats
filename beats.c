@@ -25,8 +25,10 @@
 // to store other information.
 
 struct track {
-    // TODO: You will have to add extra fields here in Stage 2.
+    struct beat *curr; // the current beat the track is on
     struct beat *head;
+    int selection;
+    int beatCount;
 };
 
 // You don't have to use the provided struct beat, you are free to
@@ -57,8 +59,6 @@ struct note {
 ////////////////////////////////////////////////////////////////////////
 
 // Add prototypes for any extra functions you create here.
-
-
 
 // Return a malloced Beat with fields initialized.
 Beat create_beat(void) {
@@ -91,12 +91,12 @@ int add_note_to_beat(Beat beat, int octave, int key) {
     if (key < 0 || key > 11) {
         return INVALID_KEY;
     }
-    // Create note lastNote that's meant to be the note before the new note
+    // Create note * lastNote that's meant to be the note before the new note
     struct note *lastNote = beat->notes;
     
     // If the new note is the first note,...
     if (lastNote == NULL) {
-        // create the new note newNote!!
+        // create the new note * newNote!!
         struct note *newNote = malloc(sizeof(struct note));
         newNote->octave = octave;
         newNote->key = key;
@@ -120,7 +120,7 @@ int add_note_to_beat(Beat beat, int octave, int key) {
         return NOT_HIGHEST_NOTE;
     }
     
-    // The new note passes all the requirements, create the new note newNote!!
+    // The new note passes all the requirements, create the new note * newNote!!
     struct note *newNote = malloc(sizeof(struct note));
     newNote->octave = octave;
     newNote->key = key;
@@ -135,7 +135,7 @@ int add_note_to_beat(Beat beat, int octave, int key) {
 
 // Print the contents of a beat.
 void print_beat(Beat beat) {
-    // create a struct note "current"
+    // create a struct note * "current"
     struct note *current = beat->notes;
     
     // if there's no beats to print
@@ -174,7 +174,7 @@ int count_notes_in_octave(Beat beat, int octave) {
     // Create a counter "count"
     int count = 0;
     
-    // Create struct note "current"
+    // Create struct note * "current"
     struct note *current = beat->notes;
     
     // Keep sliding current through every note in the beat
@@ -197,35 +197,127 @@ int count_notes_in_octave(Beat beat, int octave) {
 
 // Return a malloced track with fields initialized.
 Track create_track(void) {
-    // Note: there is no fprintf in this function, as the
-    // Stage 1 autotests call create_track but expect it to return NULL
-    // (so this function should do nothing in Stage 1).
-
-    return NULL;
+    // Create a struct track * called newTrack
+    Track newTrack = malloc(sizeof(struct track));
+    // Assign values to struct beat "curr" and "head"
+    newTrack->head = NULL;
+    newTrack->curr = NULL;
+    newTrack->beatCount = 0;
+    newTrack->selection = 0;
+    
+    return newTrack;
 }
 
 // Add a beat after the current beat in a track.
 void add_beat_to_track(Track track, Beat beat) {
-    printf("add_beat_to_track not implemented yet.\n");
+    // If there is no current beat
+    if (track->curr == NULL) {
+        beat->next = track->head;
+        track->head = beat;
+        track->beatCount++;
+    } else { // If there is a current beat selected
+        // Then beat goes right after the current beat
+        beat->next = track->curr->next;
+        track->curr->next = beat;
+        track->beatCount++;
+    }
+    
     return;
 }
 
 // Set a track's current beat to the next beat.
 int select_next_beat(Track track) {
-    printf("select_next_beat not implemented yet.\n");
+    // If there's no beats on track
+    if (track->head == NULL) {
+        return TRACK_STOPPED;
+    }
+    
+    // If no beat has been selected yet, select the first beat
+    if(track->curr == NULL) {
+        track->curr = track->head;
+        track->selection = 1;
+        return TRACK_PLAYING;
+    }
+    
+    // If this beat is the last beat in the track
+    if(track->curr->next == NULL) {
+        // Shift to the next beat in the track
+        track->curr = track->curr->next;
+        track->selection++;
+        return TRACK_STOPPED;
+    } else {
+        // Shift to the next beat in the track
+        track->curr = track->curr->next;
+        track->selection++;
+        return TRACK_PLAYING;
+    }
+    
+    
     return TRACK_STOPPED;
 }
 
 // Print the contents of a track.
 void print_track(Track track) {
-    printf("print_track not implemented yet.\n");
+    // Create a counter i that will count the number of beats
+    int i = 0;
+    
+    // Create a struct beat * "currentBeat" that points to the first beat
+    Beat currentBeat = track->head;
+    i++;
+    
+    // Run currentBeat through all the beats of the track
+    // Up to the beat before the beat being constructed
+    while (currentBeat != NULL) {
+        if (track->selection != i) {
+            printf(" [%d] ", i);
+        } else {
+            printf(">[%d] ", i);
+        }
+        
+        // Print the notes of the beat using the stage 01 function
+        print_beat(currentBeat);
+        
+        currentBeat = currentBeat->next;
+        i++;
+    }
+
+    
     return;
 }
 
 // Count beats after the current beat in a track.
 int count_beats_left_in_track(Track track) {
-    printf("count_beats_left_in_track not implemented yet.\n");
-    return 0;
+    // Create a counter "count"
+    int count = 0;
+    
+    // If there is no current track selected
+    if (track->curr == NULL) {
+        // Create a struct beat * "currentBeat" starting at the head of track
+        Beat currentBeat = track->head;
+        
+        // Slide through the entire track from beat to beat
+        // Until the beat before the beat being constructed
+        while (currentBeat != NULL) {
+            count++;
+            currentBeat = currentBeat->next;
+        }
+        
+        return count;
+
+    } else { // If there is a current track selected
+        // Create a struct beat * "currentBeat" starting at the
+        // beat after the currrent beat
+        Beat currentBeat = track->curr->next;
+        
+        // Slide through the entire track from beat to beat
+        // Until the beat before the beat being constructed
+        while (currentBeat != NULL) {
+            count++;
+            currentBeat = currentBeat->next;
+        }
+    }
+    
+    return count;
 }
 
 ////////////////////////////////////////////////////////////////////////
