@@ -2,7 +2,7 @@
 // beats.c
 //
 // This program was written by NICHOLAS LIU (z5310207)
-// on 10~ APRIL 2020
+// on 10th~17th APRIL 2020
 //
 // Version 1.0.0: Assignment released.
 // Version 1.0.1: Fix default return value of add_musical_note_to_beat.
@@ -234,14 +234,14 @@ int select_next_beat(Track track) {
     }
     
     // If no beat has been selected yet, select the first beat
-    if(track->curr == NULL) {
+    if (track->curr == NULL) {
         track->curr = track->head;
         track->selection = 1;
         return TRACK_PLAYING;
     }
     
     // If this beat is the last beat in the track
-    if(track->curr->next == NULL) {
+    if (track->curr->next == NULL) {
         // Shift to the next beat in the track
         track->curr = track->curr->next;
         track->selection++;
@@ -332,7 +332,7 @@ void free_beat(Beat beat) {
     struct note *tempBeat = beat->notes;
     
     // Free all of the notes starting from first note
-    while (beat->notes != NULL){
+    while (beat->notes != NULL) {
         beat->notes = tempBeat->next;
         free(tempBeat);
         tempBeat = beat->notes;
@@ -443,12 +443,12 @@ int add_musical_note_to_beat(Beat beat, char *musical_notation) {
     }
     
     // Add the number of sharps to the note    
-    keyNumber+=sharpCount;
+    keyNumber += sharpCount;
     
     // Make adjustments if the keyNumber exceeds 10
     while (!(keyNumber > -1 && keyNumber < 12)) {
         octave++;
-        keyNumber-=12;
+        keyNumber -= 12;
     }
     
     // If the note already exists within the beat, we cannot input it
@@ -632,7 +632,7 @@ void cut_range_to_end(Track track, int range_length) {
         track->head = afterRange;
         trackEnd->next = track->curr;
         rangeEnd->next = NULL;
-        track->selection+=shift;
+        track->selection += shift;
     } else { // Otherwise
         // Send beforeCurr to the beat before the current beat
         while (beforeCurr->next != track->curr) {
@@ -641,7 +641,7 @@ void cut_range_to_end(Track track, int range_length) {
         beforeCurr->next = afterRange;    
         trackEnd->next = track->curr;
         rangeEnd->next = NULL;
-        track->selection+=shift;  
+        track->selection += shift;  
     }
     
     return;
@@ -770,7 +770,7 @@ int reverse_range(Track track, int range_length) {
     }
     
     track->curr->next = afterRange;
-    track->selection+=reverseCount;  
+    track->selection += reverseCount;  
     
     return reverseCount;
 }
