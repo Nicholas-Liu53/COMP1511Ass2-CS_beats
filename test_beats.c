@@ -2,7 +2,7 @@
 // test_beats.c
 //
 // This program was written by NICHOLAS LIU (z5310207)
-// on 10~ APRIL 2020
+// on 10th~17th APRIL 2020
 //
 // Version 1.0.0: Assignment released.
 #include <stdio.h>
@@ -96,85 +96,43 @@ int test_add_beat_to_track(void){
     // Create some stock beats first and add notes to it
     Beat beat1 = create_beat();
     add_note_to_beat(beat1, 1, 1);
-    add_note_to_beat(beat1, 1, 2);
-    add_note_to_beat(beat1, 1, 3);
     
     Beat beat2 = create_beat();
     add_note_to_beat(beat2, 2, 4);
-    add_note_to_beat(beat2, 2, 5);
-    add_note_to_beat(beat2, 2, 6);
     
     Beat beat3 = create_beat();
     add_note_to_beat(beat3, 4, 8);
-    add_note_to_beat(beat3, 4, 9);
 
-    // Test 1: Adding a beat to track when there's no current beat
+    // Test 1: Adding a beat to track when there's 1 beat
     add_beat_to_track(test_track1, beat1);
     // Check if the Stage 02 commands work as they should
-    if (select_next_beat(test_track1) != TRACK_PLAYING) {
-        return DOES_NOT_MEET_SPEC;
-    }
     if (count_beats_left_in_track(test_track1) != 1) {
         return DOES_NOT_MEET_SPEC;
     }
-    // Select beat1 as the current beat,
-    select_next_beat(test_track1);
-    if (select_next_beat(test_track1) != TRACK_STOPPED) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    if (count_beats_left_in_track(test_track1) != 0) {
+    if (select_next_beat(test_track1) != TRACK_PLAYING) {
         return DOES_NOT_MEET_SPEC;
     }
     
-    // Test 2: Adding a beat to track when there is a current beat
+    // Test 2: Adding 2 beat to track
     add_beat_to_track(test_track2, beat1);
-    select_next_beat(test_track2);
     add_beat_to_track(test_track2, beat2);
     // Check if the Stage 02 commands work as they should
+    if (count_beats_left_in_track(test_track2) != 2) {
+        return DOES_NOT_MEET_SPEC;
+    }
     if (select_next_beat(test_track2) != TRACK_PLAYING) {
         return DOES_NOT_MEET_SPEC;
     }
-    if (count_beats_left_in_track(test_track2) != 1) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    select_next_beat(test_track2);
-    if (select_next_beat(test_track2) != TRACK_STOPPED) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    if (count_beats_left_in_track(test_track2) != 0) {
-        return DOES_NOT_MEET_SPEC;
-    }
     
-    // Test 3: Adding 3 beats to a track without selecting a current beat
+    // Test 3: Adding 3 beats to a track
     add_beat_to_track(test_track3, beat1);
     add_beat_to_track(test_track3, beat2);
     add_beat_to_track(test_track3, beat3);
     // Check if the Stage 02 commands work as they should
-    if (select_next_beat(test_track3) != TRACK_PLAYING) {
-        return DOES_NOT_MEET_SPEC;
-    }
     if (count_beats_left_in_track(test_track3) != 3) {
         return DOES_NOT_MEET_SPEC;
     }
-    select_next_beat(test_track3);
     if (select_next_beat(test_track3) != TRACK_PLAYING) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    if (count_beats_left_in_track(test_track3) != 2) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    select_next_beat(test_track3);
-    if (select_next_beat(test_track3) != TRACK_PLAYING) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    if (count_beats_left_in_track(test_track3) != 1) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    select_next_beat(test_track3);
-    if (select_next_beat(test_track3) != TRACK_STOPPED) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    if (count_beats_left_in_track(test_track3) != 0) {
         return DOES_NOT_MEET_SPEC;
     }
 
@@ -183,94 +141,100 @@ int test_add_beat_to_track(void){
 
 // Test function for `remove_selected_beat`
 int test_remove_selected_beat(void){
-    // Create a tracks for each test
+    // Create a track for the test
     Track test_track1 = create_track();
-    Track test_track2 = create_track();
-    Track test_track3 = create_track();
     
     // Create some stock beats first and add notes to it
     Beat beat1 = create_beat();
     add_note_to_beat(beat1, 1, 1);
-    add_note_to_beat(beat1, 1, 2);
-    add_note_to_beat(beat1, 1, 3);
-    
     Beat beat2 = create_beat();
     add_note_to_beat(beat2, 2, 4);
-    add_note_to_beat(beat2, 2, 5);
-    add_note_to_beat(beat2, 2, 6);
-    
     Beat beat3 = create_beat();
     add_note_to_beat(beat3, 4, 8);
-    add_note_to_beat(beat3, 4, 9);
+    Beat beat4 = create_beat();
+    add_note_to_beat(beat3, 5, 9);
+    Beat beat5 = create_beat();
+    add_note_to_beat(beat3, 6, 10);
     
     // Setting up test_track1
     add_beat_to_track(test_track1, beat1);
     add_beat_to_track(test_track1, beat2);
     add_beat_to_track(test_track1, beat3);
+    add_beat_to_track(test_track1, beat4);
+    add_beat_to_track(test_track1, beat5);
     select_next_beat(test_track1);
     
-    // Setting up test_track2
-    add_beat_to_track(test_track2, beat1);
-    add_beat_to_track(test_track2, beat2);
-    add_beat_to_track(test_track2, beat3);
-    select_next_beat(test_track2);
-    select_next_beat(test_track2);
-    select_next_beat(test_track2);
-    
-    // Setting up test_track3
-    add_beat_to_track(test_track3, beat1);
-    add_beat_to_track(test_track3, beat2);
-    add_beat_to_track(test_track3, beat3);
-    select_next_beat(test_track3);
-    
-    // Test 1: Removing first beat from a track
+    // Test 1: Removing first beat from a track of 5 beats
     remove_selected_beat(test_track1);
-    if (count_beats_left_in_track(test_track1) != 2) {
+    if (count_beats_left_in_track(test_track1) != 3) {
+        return DOES_NOT_MEET_SPEC;
+    }
+    // Test 2: Removing second beat from a track of 4 beats
+    select_next_beat(test_track1);
+    remove_selected_beat(test_track1);
+    if (count_beats_left_in_track(test_track1) != 1) {
         return DOES_NOT_MEET_SPEC;
     }
     
-
-    // Test 2: For test_track2, removing the last beat from the rack
-    if (remove_selected_beat(test_track2) != TRACK_STOPPED) {
+    // Test 3: Seeing how many beats are left is there's no current beat
+    // after removing 2 beats from test_track1 which originally had 5
+    select_next_beat(test_track1);
+    select_next_beat(test_track1);
+    if (count_beats_left_in_track(test_track1) != 3) {
         return DOES_NOT_MEET_SPEC;
     }
-    remove_selected_beat(test_track2);
-    if (count_beats_left_in_track(test_track2) != 2) {
-        return DOES_NOT_MEET_SPEC;
-    }
-
-    // Test 3: For test_track3, removing a track with only 3 beats
-    if (remove_selected_beat(test_track3) != TRACK_PLAYING) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    remove_selected_beat(test_track3);
-    if (select_next_beat(test_track3) != TRACK_PLAYING) {
-        return DOES_NOT_MEET_SPEC;
-    }
-    if (count_beats_left_in_track(test_track3) != 2) {
-        return DOES_NOT_MEET_SPEC;
-    }
-
+    
     return MEETS_SPEC;
 }
 
 // Test function for `add_musical_note_to_beat`
 int test_add_musical_note_to_beat(void){
-    /* // Create some stock beats first
-    Beat beat1 = create_beat();    
-    Beat beat2 = create_beat();
-    Beat beat3 = create_beat(); */
+    // Create a beat for the test
+    Beat test_beat = create_beat();
     
     // Create some musical notes
+    char note1[5] = {-1, 'E', '#', '#', '\0'};
+    char note2[5] = {'2', 'Z', '#', '#', '\0'};
+    char note3[5] = {'#', '4', 'A', '#', '\0'};
+    char note4[5] = {'4', 'A', '#', '#', '\0'};
+    char note5[5] = {'4', 'E', '#', '#', '\0'};
+    char note6[7] = {'3', 'F', '#', '#', '#', '#', '\0'};
+    char note7[8] = {'6', 'G', '#', '#', '#', '#', '#', '\0'};
+    char note8[10] = {'1', 'B', '#', '#', '#', '#', '#', '#', '#', '\0'};
     
-    // Test 1: Rejecting invalid notes
+    // Test 1: Rejecting invalid octaves
+    if (add_musical_note_to_beat(test_beat, note1) != INVALID_MUSICAL_NOTE) {
+        return DOES_NOT_MEET_SPEC;
+    }
+
+    // Test 2: Rejecting invalid keys
+    if (add_musical_note_to_beat(test_beat, note2) != INVALID_MUSICAL_NOTE) {
+        return DOES_NOT_MEET_SPEC;
+    }
+
+    // Test 3: Rejecting notes in the wrong order
+    if (add_musical_note_to_beat(test_beat, note3) != INVALID_MUSICAL_NOTE) {
+        return DOES_NOT_MEET_SPEC;
+    }
     
-
-    // Test 2: ???
-    // TODO: Write Test 2
-
-    // Test 3: ???
-    // TODO: Write Test 3
-
+    // Test 4: Accepting a valid note
+    if (add_musical_note_to_beat(test_beat, note4) != VALID_NOTE) {
+        return DOES_NOT_MEET_SPEC;
+    }
+    
+    // Test 5: Accepting 5 notes and see if the count functions
+    // pick it up
+    add_musical_note_to_beat(test_beat, note4);
+    add_musical_note_to_beat(test_beat, note5);
+    add_musical_note_to_beat(test_beat, note6);
+    add_musical_note_to_beat(test_beat, note7);
+    add_musical_note_to_beat(test_beat, note8);
+    if (count_notes_in_octave(test_beat, 4) != 3) {
+        return DOES_NOT_MEET_SPEC;
+    }
+    if (count_notes_in_octave(test_beat, 1) != 1) {
+        return DOES_NOT_MEET_SPEC;
+    }
+    
     return MEETS_SPEC;
 }

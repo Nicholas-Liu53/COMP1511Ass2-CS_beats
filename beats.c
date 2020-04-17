@@ -650,8 +650,8 @@ void cut_range_to_end(Track track, int range_length) {
 // Reverse a list of beats within a range of a track.
 int reverse_range(Track track, int range_length) {
     
-    // "If 'range_length' is less than or equal to one,
-    // this function should do nothing"
+    // If 'range_length' is less than or equal to one,
+    // this function should do nothing
     if (range_length <= 1) {
         return 0;
     }
@@ -726,7 +726,11 @@ int reverse_range(Track track, int range_length) {
     Beat swap1 = track->curr;
     Beat swap2 = track->curr;
     
-    if (reverseCount % 2 != 0) {
+    // Because of the nature of this swapping process,
+    // whether the number of beats being reverse is odd or even
+    // must be considered to exit the while loops that prolong
+    // the process. 
+    if (reverseCount % 2 != 0) { // If reverseCount is odd
         while (swap1 != rangeEnd) {
             swap1 = swap1->next;
         }
@@ -747,7 +751,7 @@ int reverse_range(Track track, int range_length) {
             swap1->next = swap2;
             swap1 = track->curr; 
         }
-    } else {
+    } else { // If reverseCount is even
         while (swap1 != rangeEnd) {
             swap1 = swap1->next;
         }
