@@ -14,6 +14,7 @@
 // Add any extra #includes your code needs here.
 
 #include "beats.h"
+#include <string.h>
 
 // Add your own #defines here.
 
@@ -135,14 +136,14 @@ int add_note_to_beat(Beat beat, int octave, int key) {
 
 // Print the contents of a beat.
 void print_beat(Beat beat) {
-    // create a struct note * "current"
-    struct note *current = beat->notes;
-    
     // if there's no beats to print
-    if (current == NULL) {
+    if (beat->notes == NULL) {
         printf("\n");
         return;
     }
+    
+    // create a struct note * "current"
+    struct note *current = beat->notes;
     
     // print the first note
     if (current->key < 10) {
@@ -326,26 +327,67 @@ int count_beats_left_in_track(Track track) {
 
 // Free the memory of a beat, and any memory it points to.
 void free_beat(Beat beat) {
-    // Note: there is no printf in this function, as the
-    // Stage 1 & 2 autotests call free_beat but don't check whether
-    // the memory has been freed (so this function should do nothing in
-    // Stage 1 & 2, rather than exit).
+    // Before we free the beat, we gotta free all the notes in the beat first
+    // Create a temporary note
+    struct note *tempBeat = beat->notes;
+    
+    // Free all of the notes starting from first note
+    while (beat->notes != NULL){
+        beat->notes = tempBeat->next;
+        free(tempBeat);
+        tempBeat = beat->notes;
+    }
+    // Free the notes completely
+    free (beat->notes);
+    free (beat);
     return;
 }
 
 // Free the memory of a track, and any memory it points to.
 void free_track(Track track) {
-    // Note: there is no printf in this function, as the
-    // Stage 1 & 2 autotests call free_track but don't check whether
-    // the memory has been freed (so this function should do nothing in
-    // Stage 1 & 2, rather than print an error).
+    // Before we free the track we gotta free all the beats in the track first
+    // Create a temporary beat
+    Beat tempTrack = track->head;
+    
+    //Free all the beats starting from the first beat
+    while (track->head != NULL) {
+        track->head = tempTrack->next;
+        free_beat(tempTrack);
+        tempTrack = track->head;
+    }
+    // Free the track completely
+    free (track->head);
+    free (track);
     return;
 }
 
 // Remove the currently selected beat from a track.
 int remove_selected_beat(Track track) {
-    printf("remove_selected_beat not implemented yet.");
-    return TRACK_STOPPED;
+    // Create a struct beat * "beatBefore", which is meant
+    // to be the beat before the one we're removing
+    Beat beatBefore = track->head;
+    
+    // If the head of the track is what we're removing
+    if (beatBefore == track->curr && track->curr != NULL) {
+        track->head = beatBefore->next;
+        free_beat(track->curr);
+        track->curr = track->head;
+    } else if (track->curr != NULL) {
+        while (beatBefore->next != track->curr) { // Otherwise...
+            beatBefore = beatBefore->next;
+        }
+        beatBefore->next = track->curr->next;
+        free_beat(track->curr);
+        track->curr = beatBefore->next;
+        track->beatCount--;
+    }
+    
+    // If the track has no more beats to play
+    if (track->curr == NULL) {
+        return TRACK_STOPPED;
+    }
+    
+    return TRACK_PLAYING;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -354,7 +396,155 @@ int remove_selected_beat(Track track) {
 
 // Add note to beat, given its 'musical notation'.
 int add_musical_note_to_beat(Beat beat, char *musical_notation) {
-    printf("add_musical_note_to_beat not implemented yet.");
+    // Get the octave
+    int octave = musical_notation[0] - '0';
+    
+    // Ensure that the octave is valid
+    if (octave < 0 || octave > 9) {
+        return INVALID_MUSICAL_NOTE;
+    }
+    
+    // Get the key
+    int keyLetter = musical_notation[1];
+    int keyNumber = -1;
+    if (keyLetter == 'A') {
+        keyNumber = 0;
+    } else if (keyLetter == 'B') {
+        keyNumber = 2;
+    } else if (keyLetter == 'C') {
+        keyNumber = 3;
+    } else if (keyLetter == 'D') {
+        keyNumber = 5;
+    } else if (keyLetter == 'E') {
+        keyNumber = 7;
+    } else if (keyLetter == 'F') {
+        keyNumber = 8;
+    } else if (keyLetter == 'G') {
+        keyNumber = 10;
+    } else { // if the key is invalid, e.g. there is no 'Z' key
+        return INVALID_MUSICAL_NOTE;
+    }
+    
+    // Check if anything that's not a sharp is entered
+    int i = 2;
+    while (musical_notation[i] != '\0') {
+        if (musical_notation [i] != '#') {
+            return INVALID_MUSICAL_NOTE;
+        }
+        i++;
+    }
+    
+    // Create a counter for the number of sharps and count the sharps
+    int sharpCount = 0;
+    i = 2;
+    while (musical_notation[i] == '#') {
+        sharpCount++;
+        i++;
+    }
+    
+    // Add the number of sharps to the note    
+    keyNumber+=sharpCount;
+    
+    // Make adjustments if the keyNumber exceeds 10
+    while (!(keyNumber > -1 && keyNumber < 12)) {
+        octave++;
+        keyNumber-=12;
+    }
+    
+    // If the note already exists within the beat, we cannot input it
+    // Check if the new note has not been already inputted
+    
+    struct note *noteChecker = beat->notes;
+    while (noteChecker != NULL) {
+        if (octave == noteChecker->octave && keyNumber == noteChecker->key) {
+            return INVALID_MUSICAL_NOTE;
+        }
+        noteChecker = noteChecker->next;
+    }
+    
+    // We have now acquired the octave and key
+    // Time to plug it into a fresh new note
+    struct note *newNote = malloc(sizeof(struct note));
+    newNote->octave = octave;
+    newNote->key = keyNumber;
+    newNote->next = NULL;
+    
+    // Put the new note into the beat that has been inputted
+    // Now, after inputting the new note, the beat must be in ascending order
+    // Create oneNoteHigher, which is meant to be the note
+    // higher than the new note
+    struct note *oneNoteHigher = beat->notes;
+    // if the beat is empty
+    if (oneNoteHigher == NULL) {
+        beat->notes = newNote;
+        return VALID_NOTE;
+    } else if (oneNoteHigher->next == NULL) { // if the beat has one note
+        if (oneNoteHigher->octave < newNote->octave) {
+            oneNoteHigher->next = newNote;
+        } else if (oneNoteHigher->octave > newNote->octave) {
+            newNote->next = oneNoteHigher;
+            beat->notes = newNote;
+        } else if (oneNoteHigher->key < newNote->key) {
+            oneNoteHigher->next = newNote;
+        } else {
+            newNote->next = oneNoteHigher;
+            beat->notes = newNote;
+        }
+        return VALID_NOTE;
+    }
+    // Create oneNoteLower, which is meant to be the note
+    // lower than the newNote
+    struct note *oneNoteLower = beat->notes;
+    // For if the newNote is meant to be at the end
+    struct note *runner = beat->notes;
+    int higherCounter = 0;
+    while (runner != NULL) {
+        if (runner->octave > newNote->octave) {
+            higherCounter++;
+        }
+        if (runner->octave == newNote->octave) {
+            if (runner->key > newNote->key) {
+                higherCounter++;
+            }
+        }
+        runner = runner->next;
+    }
+    if (higherCounter == 0) {
+        while (oneNoteLower->next != NULL) {
+            oneNoteLower = oneNoteLower->next;
+        }
+        oneNoteLower->next = newNote;
+        return VALID_NOTE;
+    }
+    // For if the newNote is meant to be at the beginning
+    if (oneNoteHigher->octave > newNote->octave) {
+        newNote->next = oneNoteHigher;
+        beat->notes = newNote;
+        return VALID_NOTE;
+    }
+    if (oneNoteHigher->octave == newNote->octave) {
+        if (oneNoteHigher->key > newNote->key) {
+            newNote->next = oneNoteHigher;
+            beat->notes = newNote;
+            return VALID_NOTE;
+        }
+    }
+    // For the newNote is somewhere in the middle
+    while (oneNoteHigher->octave < newNote->octave) {
+        oneNoteHigher = oneNoteHigher->next;
+    }
+    while (
+        oneNoteHigher->octave == newNote->octave && 
+        oneNoteHigher->key < newNote->key
+    ) {
+        oneNoteHigher = oneNoteHigher->next;
+    }
+    while (oneNoteLower->next != oneNoteHigher) {
+        oneNoteLower = oneNoteLower->next;
+    }
+    newNote->next = oneNoteHigher;
+    oneNoteLower->next = newNote;
+    
     return VALID_NOTE;
 }
 
@@ -365,12 +555,218 @@ int add_musical_note_to_beat(Beat beat, char *musical_notation) {
 
 // Cut a range of beats to the end of a track.
 void cut_range_to_end(Track track, int range_length) {
-    printf("cut_range_to_end not implemented yet.");
+    
+    // "If 'range_length' is less than one, this function should do nothing"
+    if (range_length < 1) {
+        return;
+    }
+    
+    // If there is no track, do nothing
+    if (track == NULL) {
+        return;
+    }
+    
+    // If the track has no beats, do nothing
+    if (track->head == NULL) {
+        return;
+    }
+    // If the track only has one beat, do nothing
+    if (track->head->next == NULL) {
+        return;
+    }
+    
+    // If there's no current beat, do nothing
+    if (track->curr == NULL) {
+        return;
+    }
+    
+    //If the range length is greater than or equal to the track size,
+    // do nothing
+    if (track->beatCount <= range_length) {
+        return;
+    }
+    
+    // Set up the structs we need to perform this function
+    Beat beforeCurr = track->head;
+    Beat rangeEnd = track->curr;
+    Beat trackEnd = track->head;
+    Beat afterRange = track->curr;
+    int rangeCount = 0;
+    
+    // Send trackEnd to the last beat of the track
+    while (trackEnd->next != NULL) {
+        trackEnd = trackEnd->next;
+    }
+    
+    // Send "rangeEnd" to the last beat of the range
+    while (rangeCount < range_length - 1) {
+        rangeEnd = rangeEnd->next;
+        rangeCount++;
+    }
+    
+    // If the range length is greater than how many beats left
+    if (rangeEnd == NULL) {
+        return;
+    }
+    
+    // The value of track->selection must be adjusted 
+    // as track->curr will be moved
+    // So create an int "shift"
+    int shift = 0;
+    // Create beat "shiftCounter" that will slide through the remaining beats
+    // after the range
+    Beat shiftCounter = rangeEnd;
+    while (shiftCounter != trackEnd) {
+        shiftCounter = shiftCounter->next;
+        shift++;
+    }
+    
+    // Send afterRange to the beat after the range
+    afterRange = rangeEnd->next;
+    
+    
+    // If the first track is the current track
+    if (rangeEnd == trackEnd) {
+        return;
+    } else if (beforeCurr == track->curr) {
+        track->head = afterRange;
+        trackEnd->next = track->curr;
+        rangeEnd->next = NULL;
+        track->selection+=shift;
+    } else { // Otherwise
+        // Send beforeCurr to the beat before the current beat
+        while (beforeCurr->next != track->curr) {
+            beforeCurr = beforeCurr->next;
+        }
+        beforeCurr->next = afterRange;    
+        trackEnd->next = track->curr;
+        rangeEnd->next = NULL;
+        track->selection+=shift;  
+    }
+    
     return;
 }
 
 // Reverse a list of beats within a range of a track.
 int reverse_range(Track track, int range_length) {
-    printf("reverse_range not implemented yet.");
-    return 0;
+    
+    // "If 'range_length' is less than or equal to one,
+    // this function should do nothing"
+    if (range_length <= 1) {
+        return 0;
+    }
+    
+    // If there is no track, do nothing
+    if (track == NULL) {
+        return 0;
+    }
+    
+    // If the track has no beats, do nothing
+    if (track->head == NULL) {
+        return 0;
+    }
+    // If the track only has one beat, do nothing
+    if (track->head->next == NULL) {
+        return 0;
+    }
+    
+    // If there's no current beat, do nothing
+    if (track->curr == NULL) {
+        return 0;
+    }
+    
+    // Set up the structs we need to perform this function
+    Beat beforeCurr = track->head;
+    Beat rangeEnd = track->curr;
+    Beat afterRange = track->curr;
+    int rangeCount = 0;
+    
+    // Create a counter for how many beats reversed
+    int reverseCount = 0;
+    
+    // Send "rangeEnd" to the last beat of the range
+    while (rangeCount < range_length - 1 && rangeEnd != NULL) {
+        rangeEnd = rangeEnd->next;
+        rangeCount++;
+    }
+    
+    // If the range length is greater than how many beats left
+    if (rangeEnd == NULL) {
+        rangeEnd = track->curr;
+        while (rangeEnd->next != NULL) {
+            reverseCount++;
+            rangeEnd = rangeEnd->next;
+        }
+    } else {
+        reverseCount = rangeCount;
+    }
+    
+    // If the reverseCount ends up being 0,
+    // this function should do nothing
+    if (reverseCount == 0) {
+        return 0;
+    }
+    
+    // Send afterRange to the beat after the range
+    afterRange = rangeEnd->next;
+    
+    // If current beat is the head beat
+    if (beforeCurr == track->curr) {
+        track->head = rangeEnd;
+    } else { // if current beat isn't the head beat
+        while (beforeCurr->next != track->curr) {
+            beforeCurr = beforeCurr->next;
+        }
+        beforeCurr->next = rangeEnd;
+    }
+    
+    // Start the reversing process
+    // These are called "swap" because we'll be reversing the direction
+    // of the pointers of the beat within the reverse range
+    Beat swap1 = track->curr;
+    Beat swap2 = track->curr;
+    
+    if (reverseCount % 2 != 0) {
+        while (swap1 != rangeEnd) {
+            swap1 = swap1->next;
+        }
+        while (swap2->next != swap1) {
+            swap2 = swap2->next;
+        }
+        swap1->next = swap2;
+        swap1 = track->curr;
+        while (swap1 != track->curr || swap2 != track->curr) {
+            while (swap1->next != swap2) {
+                swap1 = swap1->next;
+            }
+            swap2->next = swap1;
+            swap2 = track->curr;
+            while (swap2->next !=swap1) {
+                swap2 = swap2->next;
+            }
+            swap1->next = swap2;
+            swap1 = track->curr; 
+        }
+    } else {
+        while (swap1 != rangeEnd) {
+            swap1 = swap1->next;
+        }
+        while (swap1 != track->curr || swap2 != track->curr) {
+            while (swap2->next != swap1) {
+                swap2 = swap2->next;
+            }
+            swap1->next = swap2;
+            swap1 = track->curr;
+            while (swap1->next != swap2) {
+                swap1 = swap1->next;
+            }
+            swap2->next = swap1;
+            swap2 = track->curr;
+        }
+    }
+    
+    track->curr->next = afterRange;
+    track->selection+=reverseCount;  
+    
+    return reverseCount;
 }
