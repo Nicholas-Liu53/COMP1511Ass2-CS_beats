@@ -169,7 +169,7 @@ int test_remove_selected_beat(void){
     if (count_beats_left_in_track(test_track1) != 3) {
         return DOES_NOT_MEET_SPEC;
     }
-    // Test 2: Removing second beat from a track of 4 beats
+    // Test 2: Removing second beat from a track of 4 beats left
     select_next_beat(test_track1);
     remove_selected_beat(test_track1);
     if (count_beats_left_in_track(test_track1) != 1) {
